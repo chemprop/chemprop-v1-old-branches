@@ -1,4 +1,4 @@
-from typing import List, Callable, Union
+from typing import List, Callable, Union, Tuple
 
 from tqdm import trange
 import torch
@@ -35,6 +35,18 @@ def get_metric_func(metric: str) -> Callable[[Union[List[int], List[float]], Lis
 
     if metric == 'prc-auc':
         return prc_auc
+
+    if metric == 'auc-multiclass-relaxed':
+        return auc_multiclass_relaxed
+
+    if metric == 'auc-multiclass-strict':
+        return auc_multiclass_strict
+
+    if metric == 'prc-auc-multiclass-relaxed':
+        return prc_auc_multiclass_relaxed
+
+    if metric == 'prc-auc-multiclass-strict':
+        return prc_auc_multiclass_strict
 
     if metric == 'rmse':
         return rmse
@@ -91,6 +103,90 @@ def prc_auc(targets: List[int], preds: List[float]) -> float:
     """
     precision, recall, _ = precision_recall_curve(targets, preds)
     return auc(recall, precision)
+
+
+def multiclass_to_binary_strict(targets: List[int], preds: List[List[float]]) -> Tuple[List[int], List[float]]:
+    """Converts multiclass targets and preds to binary targets and preds using a strict conversion.
+
+    :param targets: A list of binary targets.
+    :param preds: A list of lists of prediction probabilities.
+    :return: A tuple with the targets and preds in binary form.
+    """
+    assert set(targets) == {0, 1, 2}
+    assert len(preds[0]) == 3
+
+    targets = [1 if target == 2 else 0 for target in targets]
+    preds = [pred[2] for pred in preds]
+
+    return targets, preds
+
+
+def multiclass_to_binary_relaxed(targets: List[int], preds: List[List[float]]) -> Tuple[List[int], List[float]]:
+    """Converts multiclass targets and preds to binary targets and preds using a relaxed conversion.
+
+    :param targets: A list of binary targets.
+    :param preds: A list of lists of prediction probabilities.
+    :return: A tuple with the targets and preds in binary form.
+    """
+    assert set(targets) == {0, 1, 2}
+    assert len(preds[0]) == 3
+
+    targets = [1 if target != 0 else 0 for target in targets]
+    preds = [1 - pred[0] for pred in preds]
+
+    return targets, preds
+
+
+def prc_auc_multiclass_strict(targets: List[int], preds: List[List[float]]) -> float:
+    """
+    Computes the area under the precision-recall curve using a strict conversion from multiclass to binary.
+
+    :param targets: A list of binary targets.
+    :param preds: A list of lists of prediction probabilities.
+    :return: The computed prc-auc.
+    """
+    targets, preds = multiclass_to_binary_strict(targets=targets, preds=preds)
+
+    return prc_auc(targets, preds)
+
+
+def prc_auc_multiclass_relaxed(targets: List[int], preds: List[List[float]]) -> float:
+    """
+    Computes the area under the precision-recall curve using a relaxed conversion from multiclass to binary.
+
+    :param targets: A list of binary targets.
+    :param preds: A list of lists of prediction probabilities.
+    :return: The computed prc-auc.
+    """
+    targets, preds = multiclass_to_binary_relaxed(targets=targets, preds=preds)
+
+    return prc_auc(targets, preds)
+
+
+def auc_multiclass_strict(targets: List[int], preds: List[List[float]]) -> float:
+    """
+    Computes the area under the ROC curve using a strict conversion from multiclass to binary.
+
+    :param targets: A list of binary targets.
+    :param preds: A list of lists of prediction probabilities.
+    :return: The computed prc-auc.
+    """
+    targets, preds = multiclass_to_binary_strict(targets=targets, preds=preds)
+
+    return roc_auc_score(targets, preds)
+
+
+def auc_multiclass_relaxed(targets: List[int], preds: List[List[float]]) -> float:
+    """
+    Computes the area under the ROC curve using a relaxed conversion from multiclass to binary.
+
+    :param targets: A list of binary targets.
+    :param preds: A list of lists of prediction probabilities.
+    :return: The computed prc-auc.
+    """
+    targets, preds = multiclass_to_binary_relaxed(targets=targets, preds=preds)
+
+    return roc_auc_score(targets, preds)
 
 
 def bce(targets: List[int], preds: List[float]) -> float:
