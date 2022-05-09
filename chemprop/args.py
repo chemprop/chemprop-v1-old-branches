@@ -929,10 +929,10 @@ class SklearnTrainArgs(TrainArgs):
     """How to weight classes (None means no class balance)."""
     single_task: bool = False
     """Whether to run each task separately (needed when dataset has null entries)."""
-    radius: int = 2
-    """Morgan fingerprint radius."""
-    num_bits: int = 2048
-    """Number of bits in morgan fingerprint."""
+    # radius: int = 2
+    # """Morgan fingerprint radius."""
+    # num_bits: int = 2048
+    # """Number of bits in morgan fingerprint."""
     num_trees: int = 500
     """Number of random forest trees."""
     impute_mode: Literal['single_task', 'median', 'mean', 'linear','frequent'] = None
