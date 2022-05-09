@@ -267,7 +267,8 @@ def run_sklearn(args: SklearnTrainArgs,
     debug('Loading data')
     data = get_data(path=args.data_path,
                     smiles_columns=args.smiles_columns,
-                    target_columns=args.target_columns)
+                    target_columns=args.target_columns,
+                    features_generator=args.features_generator)
     args.task_names = get_task_names(path=args.data_path,
                                      smiles_columns=args.smiles_columns,
                                      target_columns=args.target_columns,
@@ -300,12 +301,12 @@ def run_sklearn(args: SklearnTrainArgs,
 
     debug(f'Total size = {len(data):,} | train size = {len(train_data):,} | test size = {len(test_data):,}')
 
-    debug('Computing morgan fingerprints')
-    morgan_fingerprint = get_features_generator('morgan')
-    for dataset in [train_data, test_data]:
-        for datapoint in tqdm(dataset, total=len(dataset)):
-            for s in datapoint.smiles:
-                datapoint.extend_features(morgan_fingerprint(mol=s, radius=args.radius, num_bits=args.num_bits))
+    # debug('Computing morgan fingerprints')
+    # morgan_fingerprint = get_features_generator('morgan')
+    # for dataset in [train_data, test_data]:
+    #     for datapoint in tqdm(dataset, total=len(dataset)):
+    #         for s in datapoint.smiles:
+    #             datapoint.extend_features(morgan_fingerprint(mol=s, radius=args.radius, num_bits=args.num_bits))
 
     debug('Building model')
     if args.dataset_type == 'regression':
