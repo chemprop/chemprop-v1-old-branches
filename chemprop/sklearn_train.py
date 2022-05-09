@@ -264,6 +264,9 @@ def run_sklearn(args: SklearnTrainArgs,
     else:
         debug = info = print
 
+    if args.features_generator is None and args.features_path is None:
+        args.features_generator = ['morgan']
+
     debug('Loading data')
     data = get_data(path=args.data_path,
                     smiles_columns=args.smiles_columns,
