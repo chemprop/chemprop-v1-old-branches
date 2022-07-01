@@ -7,6 +7,8 @@ import torch
 import numpy as np
 
 from chemprop.rdkit import make_mol
+from chemprop.features import get_electronegativity, get_num_lone_pairs, get_h_bond_acceptor, \
+    get_h_bond_donor, get_in_ring_size, get_electronegativity
 
 class Featurization_parameters:
     """
@@ -17,11 +19,11 @@ class Featurization_parameters:
         # Atom feature sizes
         self.MAX_ATOMIC_NUM = 100
         self.ATOM_FEATURES = {
-            'atomic_num': list(range(self.MAX_ATOMIC_NUM)),
+            'atomic_num': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 35, 53],
             'degree': [0, 1, 2, 3, 4, 5],
-            'formal_charge': [-1, -2, 1, 2, 0],
-            'chiral_tag': [0, 1, 2, 3],
-            'num_Hs': [0, 1, 2, 3, 4],
+            # 'formal_charge': [float],
+            # 'chiral_tag': [0, 1, 2, 3],
+            # 'num_Hs': [float],
             'hybridization': [
                 Chem.rdchem.HybridizationType.SP,
                 Chem.rdchem.HybridizationType.SP2,
@@ -29,6 +31,10 @@ class Featurization_parameters:
                 Chem.rdchem.HybridizationType.SP3D,
                 Chem.rdchem.HybridizationType.SP3D2
             ],
+            # 'aromatic': [bool],
+            # 'mass': [float],
+            'h_bond_donor': [0, 1, 2, 3],
+            'h_bond_acceptor': [0, 1, 2, 3],
         }
 
         # Distance feature sizes
@@ -37,8 +43,8 @@ class Featurization_parameters:
         self.THREE_D_DISTANCE_STEP = 1
         self.THREE_D_DISTANCE_BINS = list(range(0, self.THREE_D_DISTANCE_MAX + 1, self.THREE_D_DISTANCE_STEP))
 
-        # len(choices) + 1 to include room for uncommon values; + 2 at end for IsAromatic and mass
-        self.ATOM_FDIM = sum(len(choices) + 1 for choices in self.ATOM_FEATURES.values()) + 2
+        # len(choices) + 1 to include room for uncommon values
+        self.ATOM_FDIM = sum(len(choices) + 1 for choices in self.ATOM_FEATURES.values()) + 7
         self.EXTRA_ATOM_FDIM = 0
         self.BOND_FDIM = 14
         self.EXTRA_BOND_FDIM = 0
@@ -200,12 +206,17 @@ def atom_features(atom: Chem.rdchem.Atom, functional_groups: List[int] = None) -
     else:
         features = onek_encoding_unk(atom.GetAtomicNum() - 1, PARAMS.ATOM_FEATURES['atomic_num']) + \
             onek_encoding_unk(atom.GetTotalDegree(), PARAMS.ATOM_FEATURES['degree']) + \
-            onek_encoding_unk(atom.GetFormalCharge(), PARAMS.ATOM_FEATURES['formal_charge']) + \
-            onek_encoding_unk(int(atom.GetChiralTag()), PARAMS.ATOM_FEATURES['chiral_tag']) + \
-            onek_encoding_unk(int(atom.GetTotalNumHs()), PARAMS.ATOM_FEATURES['num_Hs']) + \
+            [atom.GetFormalCharge()] + \
+            [atom.GetTotalNumHs()] + \
             onek_encoding_unk(int(atom.GetHybridization()), PARAMS.ATOM_FEATURES['hybridization']) + \
             [1 if atom.GetIsAromatic() else 0] + \
             [atom.GetMass() * 0.01]  # scaled to about the same range as other features
+            
+        features += [float(get_num_lone_pairs(atom))]
+        features += onek_encoding_unk(get_h_bond_donor(atom), [0, 1, 2, 3])
+        features += onek_encoding_unk(get_h_bond_acceptor(atom), [0, 1, 2, 3])
+        features += [get_in_ring_size(atom)]
+        features += [get_electronegativity(atom) *0.1]
         if functional_groups is not None:
             features += functional_groups
     return features
