@@ -7,7 +7,7 @@ import torch
 import numpy as np
 
 from chemprop.rdkit import make_mol
-from chemprop.features import get_electronegativity, get_num_lone_pairs, get_h_bond_acceptor, \
+from chemprop.features.calculated_features import get_electronegativity, get_num_lone_pairs, get_h_bond_acceptor, \
     get_h_bond_donor, get_in_ring_size, get_electronegativity
 
 class Featurization_parameters:
