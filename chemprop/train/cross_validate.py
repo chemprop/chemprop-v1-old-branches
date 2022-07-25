@@ -40,7 +40,7 @@ def cross_validate(args: TrainArgs,
         debug = info = print
 
     # Initialize relevant variables
-    init_seed = args.seed
+    init_seed = args.init_seed
     save_dir = args.save_dir
     args.task_names = get_task_names(path=args.data_path, smiles_columns=args.smiles_columns,
                                      target_columns=args.target_columns, ignore_columns=args.ignore_columns)

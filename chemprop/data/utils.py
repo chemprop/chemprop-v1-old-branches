@@ -543,12 +543,12 @@ def split_data(data: MoleculeDataset,
         if num_folds <= 1 or num_folds > len(data):
             raise ValueError(f'Number of folds for cross-validation must be between 2 and the number of valid datapoints ({len(data)}), inclusive.')
 
-        random = Random(0)
+        random = Random(args.init_seed)
 
         indices = np.tile(np.arange(num_folds), 1 + len(data) // num_folds)[:len(data)]
         random.shuffle(indices)
-        test_index = seed % num_folds
-        val_index = (seed + 1) % num_folds
+        test_index = (seed - args.init_seed) % num_folds
+        val_index = (seed - args.init_seed + 1) % num_folds
 
         train, val, test = [], [], []
         for d, index in zip(data, indices):

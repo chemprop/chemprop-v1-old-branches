@@ -637,6 +637,9 @@ class TrainArgs(CommonArgs):
                 self._crossval_index_sets = pickle.load(rf)
             self.num_folds = len(self.crossval_index_sets)
             self.seed = 0
+
+        # Set initial seed
+        self.init_seed = self.seed
         
         # Validate split size entry and set default values
         if self.split_sizes is None:
@@ -931,6 +934,8 @@ class HyperoptArgs(TrainArgs):
         dropout, ffn_hidden_size, ffn_num_layers, final_lr, hidden_size,
         init_lr, max_lr, warmup_epochs
     """
+    vary_seed: bool = False
+    """Whether to provide a different random seed used for splitting to each hyperparameter trial."""
 
     def process_args(self) -> None:
         super(HyperoptArgs, self).process_args()
