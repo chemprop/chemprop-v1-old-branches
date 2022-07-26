@@ -235,6 +235,7 @@ def get_data(path: str,
              phase_features_path: str = None,
              atom_descriptors_path: str = None,
              bond_features_path: str = None,
+             features_names: List[str] = None,
              max_data_size: int = None,
              store_row: bool = False,
              logger: Logger = None,
@@ -259,6 +260,7 @@ def get_data(path: str,
     :param phase_features_path: A path to a file containing phase features as applicable to spectra.
     :param atom_descriptors_path: The path to the file containing the custom atom descriptors.
     :param bond_features_path: The path to the file containing the custom bond features.
+    :param features_names: The features to be included in the model.
     :param max_data_size: The maximum number of data points to load.
     :param logger: A logger for recording output.
     :param store_row: Whether to store the raw CSV row in each :class:`~chemprop.data.data.MoleculeDatapoint`.
@@ -282,6 +284,7 @@ def get_data(path: str,
             else args.atom_descriptors_path
         bond_features_path = bond_features_path if bond_features_path is not None \
             else args.bond_features_path
+        features_names = features_names if features_names is not None else args.features_names
         max_data_size = max_data_size if max_data_size is not None else args.max_data_size
         loss_function = loss_function if loss_function is not None else args.loss_function
 
@@ -294,7 +297,7 @@ def get_data(path: str,
     if features_path is not None:
         features_data = []
         for feat_path in features_path:
-            features_data.append(load_features(feat_path))  # each is num_data x num_features
+            features_data.append(load_features(feat_path, features_names))  # each is num_data x num_features
         features_data = np.concatenate(features_data, axis=1)
     else:
         features_data = None
@@ -390,7 +393,7 @@ def get_data(path: str,
         atom_descriptors = None
         if args is not None and args.atom_descriptors is not None:
             try:
-                descriptors = load_valid_atom_or_bond_features(atom_descriptors_path, [x[0] for x in all_smiles])
+                descriptors = load_valid_atom_or_bond_features(atom_descriptors_path, [x[0] for x in all_smiles], features_names)
             except Exception as e:
                 raise ValueError(f'Failed to load or validate custom atomic descriptors or features: {e}')
 
@@ -402,7 +405,7 @@ def get_data(path: str,
         bond_features = None
         if args is not None and args.bond_features_path is not None:
             try:
-                bond_features = load_valid_atom_or_bond_features(bond_features_path, [x[0] for x in all_smiles])
+                bond_features = load_valid_atom_or_bond_features(bond_features_path, [x[0] for x in all_smiles], features_names)
             except Exception as e:
                 raise ValueError(f'Failed to load or validate custom bond features: {e}')
 

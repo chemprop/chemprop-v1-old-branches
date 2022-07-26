@@ -18,7 +18,7 @@ def save_features(path: str, features: List[np.ndarray]) -> None:
     np.savez_compressed(path, features=features)
 
 
-def load_features(path: str) -> np.ndarray:
+def load_features(path: str, features_names: List[str] = None) -> np.ndarray:
     """
     Loads features saved in a variety of formats.
 
@@ -35,6 +35,7 @@ def load_features(path: str) -> np.ndarray:
        order as the features loaded here.
 
     :param path: Path to a file containing features.
+    :param features_names: List of features names to be included.
     :return: A 2D numpy array of size :code:`(num_molecules, features_size)` containing the features.
     """
     extension = os.path.splitext(path)[1]
@@ -45,9 +46,13 @@ def load_features(path: str) -> np.ndarray:
         features = np.load(path)
     elif extension in ['.csv', '.txt']:
         with open(path) as f:
-            reader = csv.reader(f)
-            next(reader)  # skip header
-            features = np.array([[float(value) for value in row] for row in reader])
+            reader = csv.DictReader(f)
+            field_names = reader.fieldnames
+            if features_names is not None:
+                reduced_names = [n for n in field_names if n in features_names]
+            else:
+                reduced_names = field_names
+            features = np.array([[row[rn] for rn in reduced_names] for row in reader], dtype=float)
     elif extension in ['.pkl', '.pckl', '.pickle']:
         with open(path, 'rb') as f:
             features = np.array([np.squeeze(np.array(feat.todense())) for feat in pickle.load(f)])
@@ -57,7 +62,7 @@ def load_features(path: str) -> np.ndarray:
     return features
 
 
-def load_valid_atom_or_bond_features(path: str, smiles: List[str]) -> List[np.ndarray]:
+def load_valid_atom_or_bond_features(path: str, smiles: List[str], features_names: List[str] = None) -> List[np.ndarray]:
     """
     Loads features saved in a variety of formats.
 
@@ -79,6 +84,10 @@ def load_valid_atom_or_bond_features(path: str, smiles: List[str]) -> List[np.nd
 
     elif extension in ['.pkl', '.pckl', '.pickle']:
         features_df = pd.read_pickle(path)
+        if features_names is not None:
+            field_names = list(features_df.keys())
+            reduced_names = [n for n in field_names if n in features_names]
+            features_df = features_df.loc[:, reduced_names]
         if features_df.iloc[0, 0].ndim == 1:
             features = features_df.apply(lambda x: np.stack(x.tolist(), axis=1), axis=1).tolist()
         elif features_df.iloc[0, 0].ndim == 2:
