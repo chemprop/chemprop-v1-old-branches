@@ -10,6 +10,7 @@ from hyperopt import Trials, hp
 import numpy as np
 
 from chemprop.constants import HYPEROPT_SEED_FILE_NAME
+from chemprop.features.featurization import atom_features
 from chemprop.utils import makedirs
 
 
@@ -21,27 +22,84 @@ def build_search_space(search_parameters: List[str], train_epochs: int = None) -
     :param train_epochs: The total number of epochs to be used in training.
     :return: A dictionary keyed by the parameter names of hyperopt search functions.
     """
-    available_spaces = {
-        "activation": hp.choice(
-            "activation", options=["ReLU", "LeakyReLU", "PReLU", "tanh", "SELU", "ELU"]
-        ),
-        "aggregation": hp.choice("aggregation", options=["mean", "sum", "norm"]),
-        "aggregation_norm": hp.quniform("aggregation_norm", low=1, high=200, q=1),
-        "batch_size": hp.quniform("batch_size", low=5, high=200, q=5),
-        "depth": hp.quniform("depth", low=2, high=6, q=1),
-        "dropout": hp.quniform("dropout", low=0.0, high=0.4, q=0.05),
-        "ffn_hidden_size": hp.quniform("ffn_hidden_size", low=300, high=2400, q=100),
-        "ffn_num_layers": hp.quniform("ffn_num_layers", low=1, high=3, q=1),
-        "final_lr_ratio": hp.loguniform("final_lr_ratio", low=np.log(1e-4), high=0.),
-        "hidden_size": hp.quniform("hidden_size", low=300, high=2400, q=100),
-        "init_lr_ratio": hp.loguniform("init_lr_ratio", low=np.log(1e-4), high=0.),
-        "linked_hidden_size": hp.quniform("linked_hidden_size", low=300, high=2400, q=100),
-        "max_lr": hp.loguniform("max_lr", low=np.log(1e-6), high=np.log(1e-2)),
-        "warmup_epochs": hp.quniform("warmup_epochs", low=1, high=train_epochs // 2, q=1)
-    }
+    # available_spaces = {
+    #     "activation": hp.choice(
+    #         "activation", options=["ReLU", "LeakyReLU", "PReLU", "tanh", "SELU", "ELU"]
+    #     ),
+    #     "aggregation": hp.choice("aggregation", options=["mean", "sum", "norm"]),
+    #     "aggregation_norm": hp.quniform("aggregation_norm", low=1, high=200, q=1),
+    #     "batch_size": hp.quniform("batch_size", low=5, high=200, q=5),
+    #     "depth": hp.quniform("depth", low=2, high=6, q=1),
+    #     "dropout": hp.quniform("dropout", low=0.0, high=0.4, q=0.05),
+    #     "ffn_hidden_size": hp.quniform("ffn_hidden_size", low=300, high=2400, q=100),
+    #     "ffn_num_layers": hp.quniform("ffn_num_layers", low=1, high=3, q=1),
+    #     "final_lr_ratio": hp.loguniform("final_lr_ratio", low=np.log(1e-4), high=0.),
+    #     "hidden_size": hp.quniform("hidden_size", low=300, high=2400, q=100),
+    #     "init_lr_ratio": hp.loguniform("init_lr_ratio", low=np.log(1e-4), high=0.),
+    #     "linked_hidden_size": hp.quniform("linked_hidden_size", low=300, high=2400, q=100),
+    #     "max_lr": hp.loguniform("max_lr", low=np.log(1e-6), high=np.log(1e-2)),
+    #     "warmup_epochs": hp.quniform("warmup_epochs", low=1, high=train_epochs // 2, q=1)
+    # }
+    # bond_features = ['bond_length_matrix', 'bond_length_matrix_inverse',
+    #    'bond_length_matrix_squaring_inverse', 'nbi', 'delta_plus_nbi',
+    #    'delta_minus_nbi', 'nbo_lewis_energy_occ',
+    #    'delta_plus_nbo_lewis_energy_occ', 'delta_minus_nbo_lewis_energy_occ',
+    #    'nbo_lewis_energy_e', 'delta_plus_nbo_lewis_energy_e',
+    #    'delta_minus_nbo_lewis_energy_e',
+    #    'plus_nbo_alpha_spin_orbital_bd_natural_ionicity',
+    #    'minus_nbo_alpha_spin_orbital_bd_natural_ionicity',
+    #    'plus_nbo_beta_spin_orbital_bd_natural_ionicity',
+    #    'minus_nbo_beta_spin_orbital_bd_natural_ionicity',
+    #    'nbo_closed_shell_bd_natural_ionicity',
+    #    'plus_nbo_alpha_spin_orbital_bd_s%',
+    #    'plus_nbo_alpha_spin_orbital_bd_p%',
+    #    'plus_nbo_alpha_spin_orbital_bd_d%',
+    #    'minus_nbo_alpha_spin_orbital_bd_s%',
+    #    'minus_nbo_alpha_spin_orbital_bd_p%',
+    #    'minus_nbo_alpha_spin_orbital_bd_d%',
+    #    'plus_nbo_beta_spin_orbital_bd_s%', 'plus_nbo_beta_spin_orbital_bd_p%',
+    #    'plus_nbo_beta_spin_orbital_bd_d%', 'minus_nbo_beta_spin_orbital_bd_s%',
+    #    'minus_nbo_beta_spin_orbital_bd_p%',
+    #    'minus_nbo_beta_spin_orbital_bd_d%', 'nbo_closed_shell_bd_s%',
+    #    'nbo_closed_shell_bd_p%', 'nbo_closed_shell_bd_d%', 'nlmo',
+    #    'npa_wiberg_bdx', 'delta_plus_wiberg_bdx', 'delta_minus_wiberg_bdx',
+    #    'bond_ring_size_5', 'bond_ring_size_6']
+    # atom_features = ['delta_plus_elec_config_1s', 'delta_plus_elec_config_2s',
+    #    'delta_plus_elec_config_2p', 'delta_plus_elec_config_3s',
+    #    'delta_plus_elec_config_3p', 'delta_plus_elec_config_3d',
+    #    'delta_plus_elec_config_4s', 'delta_plus_elec_config_4p',
+    #    'delta_plus_elec_config_4d', 'delta_plus_elec_config_5p',
+    #    'delta_plus_elec_config_5s', 'delta_minus_elec_config_1s',
+    #    'delta_minus_elec_config_2s', 'delta_minus_elec_config_2p',
+    #    'delta_minus_elec_config_3s', 'delta_minus_elec_config_3p',
+    #    'delta_minus_elec_config_3d', 'delta_minus_elec_config_4s',
+    #    'delta_minus_elec_config_4p', 'delta_minus_elec_config_4d',
+    #    'delta_minus_elec_config_5p', 'delta_minus_elec_config_5s',
+    #    'hirshfeld_charges', 'hirshfeld_charges_fukui_neu',
+    #    'hirshfeld_charges_fukui_elec', 'hirshfeld_cm5_charges',
+    #    'hirshfeld_cm5_charges_fukui_neu', 'hirshfeld_cm5_charges_fukui_elec',
+    #    'plus_hirshfeld_spin_density', 'minus_hirshfeld_spin_density',
+    #    'mulliken_charge', 'mulliken_charges_fukui_neu',
+    #    'mulliken_charges_fukui_elec', 'plus_mulliken_spin',
+    #    'minus_mulliken_spin', 'nlmo_atom', 'shielding_constants',
+    #    'npa_charges', 'npa_charges_fukui_neu', 'npa_charges_fukui_elec',
+    #    'npa_wiberg_bdx_by_atom', 'delta_plus_npa_wiberg_bdx_by_atom',
+    #    'delta_minus_npa_wiberg_bdx_by_atom', 'atom_ring_size_5',
+    #    'atom_ring_size_6']
+    # molecule_features = ['HOMO-2', 'HOMO-1', 'HOMO', 'LUMO', 'LUMO+1', 'LUMO+2', 'HOMO-2/LUMO', 'HOMO-2/LUMO+1', 'HOMO-2/LUMO+2', 'HOMO-1/LUMO', 'HOMO-1/LUMO+1', 'HOMO-1/LUMO+2', 'HOMO/LUMO', 'HOMO/LUMO+1', 'HOMO/LUMO+2', 'HOMO-2_prob', 'HOMO-1_prob', 'HOMO_prob', 'LUMO_prob', 'LUMO+1_prob', 'LUMO+2_prob', 'HOMO-2/LUMO_prob', 'HOMO-2/LUMO+1_prob', 'HOMO-2/LUMO+2_prob', 'HOMO-1/LUMO_prob', 'HOMO-1/LUMO+1_prob', 'HOMO-1/LUMO+2_prob', 'HOMO/LUMO_prob', 'HOMO/LUMO+1_prob', 'HOMO/LUMO+2_prob', 'ionization_energy', 'electron_affinity', 'charge', 'hirshfeld_dipole_tot', 'plus_hirshfeld_dipole_tot', 'minus_hirshfeld_dipole_tot', 'mulliken_dipole_tot', 'plus_mulliken_dipole_tot', 'minus_mulliken_dipole_tot']
+    # all_features = atom_features + bond_features + molecule_features
+
     space = {}
-    for key in search_parameters:
-        space[key] = available_spaces[key]
+    # for key in search_parameters:
+    #     space[key] = available_spaces[key]
+    for i in range(57):
+        space[f'feature_group_{i}'] = hp.choice(
+            f'feature_group_{i}', options=[True, False]
+        )
+    
+# "activation": hp.choice(
+    #         "activation", options=["ReLU", "LeakyReLU", "PReLU", "tanh", "SELU", "ELU"]
+    #     ),
 
     return space
 

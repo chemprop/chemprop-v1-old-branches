@@ -950,43 +950,43 @@ class HyperoptArgs(TrainArgs):
             self.startup_random_iters = self.num_iters // 2
 
         # Construct set of search parameters
-        supported_keywords = [
-            "basic", "learning_rate", "linked_hidden_size", "all",
-            "activation", "aggregation", "aggregation_norm", "batch_size", "depth",
-            "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr", "hidden_size",
-            "init_lr", "max_lr", "warmup_epochs"
-        ]
-        supported_parameters = [
-            "activation", "aggregation", "aggregation_norm", "batch_size", "depth",
-            "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr_ratio", "hidden_size",
-            "init_lr_ratio", "linked_hidden_size", "max_lr", "warmup_epochs"
-        ]
-        unsupported_keywords = set(self.search_parameter_keywords) - set(supported_keywords)
-        if len(unsupported_keywords) != 0:
-            raise NotImplementedError(
-                f"Keywords for what hyperparameters to include in the search are designated \
-                    with the argument `--search_parameter_keywords`. The following unsupported\
-                    keywords were received: {unsupported_keywords}. The available supported\
-                    keywords are: {supported_keywords}"
-            )
-        search_parameters = set()
-        if "all" in self.search_parameter_keywords:
-            search_parameters.update(supported_parameters)
-        if "basic" in self.search_parameter_keywords:
-            search_parameters.update(["depth", "ffn_num_layers", "dropout", "linked_hidden_size"])
-        if "learning_rate" in self.search_parameter_keywords:
-            search_parameters.update(["max_lr", "init_lr_ratio", "final_lr_ratio", "warmup_epochs"])
-        for kw in self.search_parameter_keywords:
-            if kw in supported_parameters:
-                search_parameters.add(kw)
-        if "init_lr" in self.search_parameter_keywords:
-            search_parameters.add("init_lr_ratio")
-        if "final_lr" in self.search_parameter_keywords:
-            search_parameters.add("final_lr_ratio")
-        if "linked_hidden_size" in search_parameters and ("hidden_size" in search_parameters or "ffn_hidden_size" in search_parameters):
-            search_parameters.remove("linked_hidden_size")
-            search_parameters.update(["hidden_size", "ffn_hidden_size"])
-        self.search_parameters = list(search_parameters)
+        # supported_keywords = [
+        #     "basic", "learning_rate", "linked_hidden_size", "all",
+        #     "activation", "aggregation", "aggregation_norm", "batch_size", "depth",
+        #     "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr", "hidden_size",
+        #     "init_lr", "max_lr", "warmup_epochs"
+        # ]
+        # supported_parameters = [
+        #     "activation", "aggregation", "aggregation_norm", "batch_size", "depth",
+        #     "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr_ratio", "hidden_size",
+        #     "init_lr_ratio", "linked_hidden_size", "max_lr", "warmup_epochs"
+        # ]
+        # unsupported_keywords = set(self.search_parameter_keywords) - set(supported_keywords)
+        # if len(unsupported_keywords) != 0:
+        #     raise NotImplementedError(
+        #         f"Keywords for what hyperparameters to include in the search are designated \
+        #             with the argument `--search_parameter_keywords`. The following unsupported\
+        #             keywords were received: {unsupported_keywords}. The available supported\
+        #             keywords are: {supported_keywords}"
+        #     )
+        # search_parameters = set()
+        # if "all" in self.search_parameter_keywords:
+        #     search_parameters.update(supported_parameters)
+        # if "basic" in self.search_parameter_keywords:
+        #     search_parameters.update(["depth", "ffn_num_layers", "dropout", "linked_hidden_size"])
+        # if "learning_rate" in self.search_parameter_keywords:
+        #     search_parameters.update(["max_lr", "init_lr_ratio", "final_lr_ratio", "warmup_epochs"])
+        # for kw in self.search_parameter_keywords:
+        #     if kw in supported_parameters:
+        #         search_parameters.add(kw)
+        # if "init_lr" in self.search_parameter_keywords:
+        #     search_parameters.add("init_lr_ratio")
+        # if "final_lr" in self.search_parameter_keywords:
+        #     search_parameters.add("final_lr_ratio")
+        # if "linked_hidden_size" in search_parameters and ("hidden_size" in search_parameters or "ffn_hidden_size" in search_parameters):
+        #     search_parameters.remove("linked_hidden_size")
+        #     search_parameters.update(["hidden_size", "ffn_hidden_size"])
+        # self.search_parameters = list(search_parameters)
 
 
 class SklearnTrainArgs(TrainArgs):

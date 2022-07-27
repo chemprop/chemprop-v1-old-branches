@@ -10,6 +10,7 @@ import numpy as np
 
 from chemprop.args import HyperoptArgs
 from chemprop.constants import HYPEROPT_LOGGER_NAME
+from chemprop.features.featurization import atom_features, bond_features
 from chemprop.models import MoleculeModel
 from chemprop.nn_utils import param_count
 from chemprop.train import cross_validate, run_training
@@ -72,9 +73,9 @@ def hyperopt(args: HyperoptArgs) -> None:
     # Define hyperparameter optimization
     def objective(hyperparams: Dict[str, Union[int, float]], seed: int) -> Dict:
         # Convert hyperparams from float to int when necessary
-        for key in int_keys:
-            if key in hyperparams:
-                hyperparams[key] = int(hyperparams[key])
+        # for key in int_keys:
+        #     if key in hyperparams:
+        #         hyperparams[key] = int(hyperparams[key])
 
         # Copy args
         hyper_args = deepcopy(args)
@@ -84,8 +85,143 @@ def hyperopt(args: HyperoptArgs) -> None:
             folder_name = f"trial_seed_{seed}"
             hyper_args.save_dir = os.path.join(hyper_args.save_dir, folder_name)
 
+        atom_property = [
+            ['delta_plus_elec_config_1s',
+            'delta_minus_elec_config_1s'],
+            ['delta_plus_elec_config_2s',
+            'delta_minus_elec_config_2s'],
+            ['delta_plus_elec_config_2p',
+            'delta_minus_elec_config_2p'],
+            ['delta_plus_elec_config_3s',
+            'delta_minus_elec_config_3s'],
+            ['delta_plus_elec_config_3p',
+            'delta_minus_elec_config_3p'],
+            ['delta_plus_elec_config_3d',
+            'delta_minus_elec_config_3d'],
+            ['delta_plus_elec_config_4s',
+            'delta_minus_elec_config_4s'],
+            ['delta_plus_elec_config_4p',
+            'delta_minus_elec_config_4p'],
+            ['delta_plus_elec_config_4d',
+            'delta_minus_elec_config_4d'],
+            ['delta_plus_elec_config_5s',
+            'delta_minus_elec_config_5s'],
+            ['delta_plus_elec_config_5p',
+            'delta_minus_elec_config_5p'],
+            ['hirshfeld_charges'],
+            ['hirshfeld_charges_fukui_neu',
+            'hirshfeld_charges_fukui_elec'],
+            ['hirshfeld_cm5_charges'],
+            ['hirshfeld_cm5_charges_fukui_neu',
+            'hirshfeld_cm5_charges_fukui_elec'],
+            ['plus_hirshfeld_spin_density',
+            'minus_hirshfeld_spin_density'],
+            ['mulliken_charge'],
+            ['mulliken_charges_fukui_neu',
+            'mulliken_charges_fukui_elec'],
+            ['plus_mulliken_spin',
+            'minus_mulliken_spin'],
+            ['nlmo_atom'],
+            ['shielding_constants'],
+            ['npa_charges'],
+            ['npa_charges_fukui_neu',
+            'npa_charges_fukui_elec'],
+            ['npa_wiberg_bdx_by_atom'],
+            ['delta_plus_npa_wiberg_bdx_by_atom',
+            'delta_minus_npa_wiberg_bdx_by_atom'],
+            ['atom_ring_size_5',
+            'atom_ring_size_6'],
+        ]
+        bond_property = [
+            ['bond_length_matrix'],
+            ['bond_length_matrix_inverse'],
+            ['bond_length_matrix_squaring_inverse'],
+            ['nbi'],
+            ['delta_plus_nbi',
+            'delta_minus_nbi'],
+            ['nbo_lewis_energy_occ'],
+            ['delta_plus_nbo_lewis_energy_occ',
+            'delta_minus_nbo_lewis_energy_occ'],
+            ['nbo_lewis_energy_e'],
+            ['delta_plus_nbo_lewis_energy_e',
+            'delta_minus_nbo_lewis_energy_e'],
+            ['plus_nbo_alpha_spin_orbital_bd_natural_ionicity',
+            'minus_nbo_alpha_spin_orbital_bd_natural_ionicity',
+            'plus_nbo_beta_spin_orbital_bd_natural_ionicity',
+            'minus_nbo_beta_spin_orbital_bd_natural_ionicity'],
+            ['nbo_closed_shell_bd_natural_ionicity'],
+            ['plus_nbo_alpha_spin_orbital_bd_s%',
+            'minus_nbo_alpha_spin_orbital_bd_s%',
+            'plus_nbo_beta_spin_orbital_bd_s%',
+            'minus_nbo_beta_spin_orbital_bd_s%'],
+            ['plus_nbo_alpha_spin_orbital_bd_p%',
+            'minus_nbo_alpha_spin_orbital_bd_p%',
+            'plus_nbo_beta_spin_orbital_bd_p%',
+            'minus_nbo_beta_spin_orbital_bd_p%'],
+            ['plus_nbo_alpha_spin_orbital_bd_d%',
+            'minus_nbo_alpha_spin_orbital_bd_d%',
+            'plus_nbo_beta_spin_orbital_bd_d%',
+            'minus_nbo_beta_spin_orbital_bd_d%'],
+            ['nbo_closed_shell_bd_s%'],
+            ['nbo_closed_shell_bd_p%'],
+            ['nbo_closed_shell_bd_d%'],
+            ['nlmo'],
+            ['npa_wiberg_bdx'],
+            ['delta_plus_wiberg_bdx',
+            'delta_minus_wiberg_bdx'],
+            ['bond_ring_size_5',
+            'bond_ring_size_6'],
+        ]
+        molecule_property = [
+            ['HOMO-2',
+            'HOMO-1',
+            'HOMO',
+            'LUMO',
+            'LUMO+1',
+            'LUMO+2'],
+            ['HOMO/LUMO'],
+            ['HOMO-2/LUMO',
+            'HOMO-2/LUMO+1',
+            'HOMO-2/LUMO+2',
+            'HOMO-1/LUMO',
+            'HOMO-1/LUMO+1',
+            'HOMO-1/LUMO+2',
+            'HOMO/LUMO+1',
+            'HOMO/LUMO+2'],
+            ['HOMO-2_prob',
+            'HOMO-1_prob',
+            'HOMO_prob',
+            'LUMO_prob',
+            'LUMO+1_prob',
+            'LUMO+2_prob',
+            'HOMO-2/LUMO_prob',
+            'HOMO-2/LUMO+1_prob',
+            'HOMO-2/LUMO+2_prob',
+            'HOMO-1/LUMO_prob',
+            'HOMO-1/LUMO+1_prob',
+            'HOMO-1/LUMO+2_prob',
+            'HOMO/LUMO_prob',
+            'HOMO/LUMO+1_prob',
+            'HOMO/LUMO+2_prob'],
+            ['ionization_energy',  # plus_energy - energy
+            'electron_affinity'],  # minus_energy - energy
+            ['charge'],
+            ['hirshfeld_dipole_tot'],
+            ['plus_hirshfeld_dipole_tot',
+            'minus_hirshfeld_dipole_tot'],
+            ['mulliken_dipole_tot'],
+            ['plus_mulliken_dipole_tot',
+            'minus_mulliken_dipole_tot'],
+        ]
+
+        all_features = atom_property + bond_property + molecule_property
+
+        included_features = []
         for key, value in hyperparams.items():
-            setattr(hyper_args, key, value)
+            if value:
+                idx = key.split('_')[-1]
+                included_features.extend(all_features[int(idx)])
+        hyper_args.features_names = included_features
 
         if "linked_hidden_size" in hyperparams:
             hyper_args.ffn_hidden_size = hyperparams["linked_hidden_size"]
