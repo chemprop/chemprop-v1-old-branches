@@ -948,6 +948,8 @@ class HyperoptArgs(TrainArgs):
         # Set number of startup random trials
         if self.startup_random_iters is None:
             self.startup_random_iters = self.num_iters // 2
+        
+        self.search_parameters = []
 
         # Construct set of search parameters
         # supported_keywords = [
