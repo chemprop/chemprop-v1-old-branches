@@ -97,7 +97,7 @@ def hyperopt(args: HyperoptArgs) -> None:
             hyper_args.final_lr = hyperparams["max_lr"] * hyperparams["final_lr_ratio"]
 
         if args.vary_seed:
-            hyper_args["seed"] = seed
+            hyper_args.seed = seed
 
         # Cross validate
         mean_score, std_score = cross_validate(args=hyper_args, train_func=run_training)
