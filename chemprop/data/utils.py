@@ -392,10 +392,7 @@ def get_data(path: str,
         atom_features = None
         atom_descriptors = None
         if args is not None and args.atom_descriptors is not None:
-            try:
-                descriptors = load_valid_atom_or_bond_features(atom_descriptors_path, [x[0] for x in all_smiles], features_names)
-            except Exception as e:
-                raise ValueError(f'Failed to load or validate custom atomic descriptors or features: {e}')
+            descriptors = load_valid_atom_or_bond_features(atom_descriptors_path, [x[0] for x in all_smiles], features_names)
 
             if args.atom_descriptors == 'feature':
                 atom_features = descriptors
@@ -404,10 +401,7 @@ def get_data(path: str,
 
         bond_features = None
         if args is not None and args.bond_features_path is not None:
-            try:
-                bond_features = load_valid_atom_or_bond_features(bond_features_path, [x[0] for x in all_smiles], features_names)
-            except Exception as e:
-                raise ValueError(f'Failed to load or validate custom bond features: {e}')
+            bond_features = load_valid_atom_or_bond_features(bond_features_path, [x[0] for x in all_smiles], features_names)
 
         data = MoleculeDataset([
             MoleculeDatapoint(
