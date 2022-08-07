@@ -40,7 +40,7 @@ def cross_validate(args: TrainArgs,
         debug = info = print
 
     # Initialize relevant variables
-    init_seed = args.init_seed
+    args.init_seed = args.seed
     save_dir = args.save_dir
     args.task_names = get_task_names(path=args.data_path, smiles_columns=args.smiles_columns,
                                      target_columns=args.target_columns, ignore_columns=args.ignore_columns)
@@ -101,7 +101,7 @@ def cross_validate(args: TrainArgs,
     all_scores = defaultdict(list)
     for fold_num in range(args.num_folds):
         info(f'Fold {fold_num}')
-        args.seed = init_seed + fold_num
+        args.seed = args.init_seed + fold_num
         args.save_dir = os.path.join(save_dir, f'fold_{fold_num}')
         makedirs(args.save_dir)
         data.reset_features_and_targets()
@@ -131,11 +131,11 @@ def cross_validate(args: TrainArgs,
     contains_nan_scores = False
     for fold_num in range(args.num_folds):
         for metric, scores in all_scores.items():
-            info(f'\tSeed {init_seed + fold_num} ==> test {metric} = {multitask_mean(scores[fold_num], metric):.6f}')
+            info(f'\tSeed {args.init_seed + fold_num} ==> test {metric} = {multitask_mean(scores[fold_num], metric):.6f}')
 
             if args.show_individual_scores:
                 for task_name, score in zip(args.task_names, scores[fold_num]):
-                    info(f'\t\tSeed {init_seed + fold_num} ==> test {task_name} {metric} = {score:.6f}')
+                    info(f'\t\tSeed {args.init_seed + fold_num} ==> test {task_name} {metric} = {score:.6f}')
                     if np.isnan(score):
                         contains_nan_scores = True
 

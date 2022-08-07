@@ -638,9 +638,6 @@ class TrainArgs(CommonArgs):
             self.num_folds = len(self.crossval_index_sets)
             self.seed = 0
 
-        # Set initial seed
-        self.init_seed = self.seed
-        
         # Validate split size entry and set default values
         if self.split_sizes is None:
             if self.separate_val_path is None and self.separate_test_path is None: # separate data paths are not provided
