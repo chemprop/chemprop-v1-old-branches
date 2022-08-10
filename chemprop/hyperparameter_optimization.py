@@ -73,9 +73,9 @@ def hyperopt(args: HyperoptArgs) -> None:
     # Define hyperparameter optimization
     def objective(hyperparams: Dict[str, Union[int, float]], seed: int) -> Dict:
         # Convert hyperparams from float to int when necessary
-        # for key in int_keys:
-        #     if key in hyperparams:
-        #         hyperparams[key] = int(hyperparams[key])
+        for key in int_keys:
+            if key in hyperparams:
+                hyperparams[key] = int(hyperparams[key])
 
         # Copy args
         hyper_args = deepcopy(args)
@@ -218,9 +218,14 @@ def hyperopt(args: HyperoptArgs) -> None:
 
         included_features = []
         for key, value in hyperparams.items():
-            if value:
-                idx = key.split('_')[-1]
-                included_features.extend(all_features[int(idx)])
+            if "feature_group" in key:
+                if value:
+                    idx = key.split('_')[-1]
+                    included_features.extend(all_features[int(idx)])
+            else:
+                for key, value in hyperparams.items():
+                    setattr(hyper_args, key, value)
+
         hyper_args.features_names = included_features
 
         if "linked_hidden_size" in hyperparams:
