@@ -18,10 +18,7 @@ class Featurization_parameters:
         self.MAX_ATOMIC_NUM = 100
         self.ATOM_FEATURES = {
             'atomic_num': list(range(self.MAX_ATOMIC_NUM)),
-            'degree': [0, 1, 2, 3, 4, 5],
-            'formal_charge': [-1, -2, 1, 2, 0],
             'chiral_tag': [0, 1, 2, 3],
-            'num_Hs': [0, 1, 2, 3, 4],
             'hybridization': [
                 Chem.rdchem.HybridizationType.SP,
                 Chem.rdchem.HybridizationType.SP2,
@@ -37,8 +34,8 @@ class Featurization_parameters:
         self.THREE_D_DISTANCE_STEP = 1
         self.THREE_D_DISTANCE_BINS = list(range(0, self.THREE_D_DISTANCE_MAX + 1, self.THREE_D_DISTANCE_STEP))
 
-        # len(choices) + 1 to include room for uncommon values; + 2 at end for IsAromatic and mass
-        self.ATOM_FDIM = sum(len(choices) + 1 for choices in self.ATOM_FEATURES.values()) + 2
+        # len(choices) + 1 to include room for uncommon values; + 2 at end for IsAromatic and mass; + 3 for converting onehot to incremental
+        self.ATOM_FDIM = sum(len(choices) + 1 for choices in self.ATOM_FEATURES.values()) + 2 + 3
         self.EXTRA_ATOM_FDIM = 0
         self.BOND_FDIM = 14
         self.EXTRA_BOND_FDIM = 0
@@ -214,11 +211,11 @@ def atom_features(atom: Chem.rdchem.Atom, functional_groups: List[int] = None) -
         features = [0] * PARAMS.ATOM_FDIM
     else:
         features = onek_encoding_unk(atom.GetAtomicNum() - 1, PARAMS.ATOM_FEATURES['atomic_num']) + \
-            onek_encoding_unk(atom.GetTotalDegree(), PARAMS.ATOM_FEATURES['degree']) + \
-            onek_encoding_unk(atom.GetFormalCharge(), PARAMS.ATOM_FEATURES['formal_charge']) + \
             onek_encoding_unk(int(atom.GetChiralTag()), PARAMS.ATOM_FEATURES['chiral_tag']) + \
-            onek_encoding_unk(int(atom.GetTotalNumHs()), PARAMS.ATOM_FEATURES['num_Hs']) + \
             onek_encoding_unk(int(atom.GetHybridization()), PARAMS.ATOM_FEATURES['hybridization']) + \
+            [atom.GetFormalCharge()] + \
+            [atom.GetTotalNumHs()] + \
+            [atom.GetTotalDegree()] + \
             [1 if atom.GetIsAromatic() else 0] + \
             [atom.GetMass() * 0.01]  # scaled to about the same range as other features
         if functional_groups is not None:
