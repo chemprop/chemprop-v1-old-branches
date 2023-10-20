@@ -17,7 +17,7 @@ class Featurization_parameters:
         # Atom feature sizes
         self.MAX_ATOMIC_NUM = 100
         self.ATOM_FEATURES = {
-            'atomic_num': list(range(self.MAX_ATOMIC_NUM)),
+            'atomic_num': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 33, 34, 35, 36, 52, 53, 54],
             'chiral_tag': [0, 1, 2, 3],
             'hybridization': [
                 Chem.rdchem.HybridizationType.SP,
@@ -210,7 +210,7 @@ def atom_features(atom: Chem.rdchem.Atom, functional_groups: List[int] = None) -
     if atom is None:
         features = [0] * PARAMS.ATOM_FDIM
     else:
-        features = onek_encoding_unk(atom.GetAtomicNum() - 1, PARAMS.ATOM_FEATURES['atomic_num']) + \
+        features = onek_encoding_unk(atom.GetAtomicNum() if atom.GetAtomicNum() in PARAMS.ATOM_FEATURES['atomic_num'] else 0, PARAMS.ATOM_FEATURES['atomic_num']) + \
             onek_encoding_unk(int(atom.GetChiralTag()), PARAMS.ATOM_FEATURES['chiral_tag']) + \
             onek_encoding_unk(int(atom.GetHybridization()), PARAMS.ATOM_FEATURES['hybridization']) + \
             [atom.GetFormalCharge()] + \
